@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 
@@ -7,6 +7,15 @@ POLYA_DEFAULT = 16
 MISMATCH_DEFAULT = 0.1
 ADAPTOR_LENGTH_DEFAULT = 0
 KEEP_DEFAULT = True
+
+stats_dict = {
+    "matched": 0,
+    "not_matched": 0,
+    "5_prime_polyA": 0,
+    "3_prime_polyA": 0,
+    "5_prime_polyT": 0,
+    "3_prime_polyT": 0,
+}
 
 
 def check_read(
@@ -39,16 +48,24 @@ def check_read(
         end_window = seq[-(i + polya_length) : -i]
         if start_window.count("A") >= (polya_length - num_mismatches):
             match = True
+            stats_dict["5_prime_polyA"] += 1
             break
         elif start_window.count("T") >= (polya_length - num_mismatches):
             match = True
+            stats_dict["5_prime_polyT"] += 1
             break
         elif end_window.count("A") >= (polya_length - num_mismatches):
             match = True
+            stats_dict["3_prime_polyA"] += 1
             break
         elif end_window.count("T") >= (polya_length - num_mismatches):
             match = True
+            stats_dict["3_prime_polyT"] += 1
             break
+    if match:
+        stats_dict["matched"] += 1
+    else:
+        stats_dict["not_matched"] += 1
     if keep and match:
         return lines
     elif not keep and not match:
@@ -100,6 +117,21 @@ def filter_reads(
                 print("".join(processed))
 
 
+def format_stats(stats_dict, input_file):
+    return (
+        f"# polya-filter stats on {input_file}\n"
+        f"\n"
+        f"reads with polyA/T match: {stats_dict["matched"]}\n"
+        f"reads without polyA/T match: {stats_dict["not_matched"]}\n"
+        f"total reads: {stats_dict["matched"] + stats_dict["not_matched"]}\n"
+        f"\n"
+        f"reads with 5' polyA match: {stats_dict["5_prime_polyA"]}\n"
+        f"reads with 5' polyT match: {stats_dict["5_prime_polyT"]}\n"
+        f"reads with 3' polyA match: {stats_dict["3_prime_polyA"]}\n"
+        f"reads with 3' polyT match: {stats_dict["3_prime_polyT"]}\n"
+    )
+
+
 if __name__ == "__main__":
     # Set up command line arguments:
     parser = argparse.ArgumentParser()
@@ -136,7 +168,7 @@ if __name__ == "__main__":
         default=ADAPTOR_LENGTH_DEFAULT,
     )
     parser.add_argument(
-        "--keep", action="store_true", help="Keep reads with polyA/T match"
+        "--keep", action="store_true", help="Keep reads with polyA/T match (default)"
     )
     parser.add_argument(
         "--discard",
@@ -145,6 +177,13 @@ if __name__ == "__main__":
         help="Discard reads with polyA/T match",
     )
     parser.set_defaults(keep=KEEP_DEFAULT)
+    parser.add_argument(
+        "--stats",
+        dest="stats",
+        action="store_true",
+        help="Write stats to text file",
+    )
+    parser.set_defaults(stats=False)
 
     args = parser.parse_args()
 
@@ -154,6 +193,7 @@ if __name__ == "__main__":
     mismatch = args.mismatch
     adaptor_length = args.adaptor_length
     keep = args.keep
+    stats = args.stats
 
     # Run function on file
     filter_reads(
@@ -164,3 +204,13 @@ if __name__ == "__main__":
         adaptor_length=adaptor_length,
         keep=keep,
     )
+
+    # Write stats
+    if stats:
+        if output_file:
+            stats_out_file = output_file.replace(".fastq", ".stats")
+        else:
+            stats_out_file = input_file.replace(".fastq", ".stats")
+        formatted_stats = format_stats(stats_dict, input_file)
+        with open(stats_out_file, "w") as out:
+            out.write(formatted_stats)
