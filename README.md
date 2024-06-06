@@ -10,7 +10,7 @@ Runs *really* quickly! Takes less than 20 seconds to filter a set of 1 million O
 ## Arguments
 
 ```
-usage: polya-filter.py [-h] -i INPUT [-o OUTPUT] [-p POLYA_LENGTH] [-m MISMATCH] [-a ADAPTOR_LENGTH] [--keep] [--discard] [--stats]
+usage: polya-filter.py [-h] -i INPUT [-o OUTPUT] [-p POLYA_LENGTH] [-m MISMATCH] [-a ADAPTOR_LENGTH] [--keep] [--discard] [--stats] [--histo]
 
 options:
   -h, --help            show this help message and exit
@@ -27,6 +27,7 @@ options:
   --keep                Keep reads with polyA/T match (default)
   --discard             Discard reads with polyA/T match
   --stats               Write stats to text file
+  --histo               Write histogram of polyA/T lengths to csv file
   ```
 
 ## Examples
@@ -41,4 +42,10 @@ Read an input file called `reads.fastq`, filter to **discard** reads with a poly
 
 ```bash
 ./polya-filter.py -i reads.fastq -p 12 -m 0.1 -a 75 --discard
+```
+
+The program can also estimate polyA/T lengths at the ends (i.e. 5' and 3') of reads and output a csv-formatted histogram of the lengths and counts, which can then be plotted in your favourite plotting program. Simply add `--histo` to do this, as follows:
+
+```bash
+./polya-filter.py -i reads.fastq -o reads.filtered.fastq -p 20 -m 0.2 -a 30 --keep --histo
 ```
