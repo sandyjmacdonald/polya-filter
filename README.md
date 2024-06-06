@@ -51,3 +51,5 @@ The program can also estimate polyA/T lengths at the ends (i.e. 5' and 3') of re
 ```bash
 ./polya-filter.py -i reads.fastq -o reads.filtered.fastq -p 20 -m 0.2 -a 30 --keep --histo
 ```
+
+![]("polya_histo.png")

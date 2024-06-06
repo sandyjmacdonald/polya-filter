@@ -204,7 +204,7 @@ def format_stats(stats_dict, input_file):
     three_prime_polyA = stats_dict["3_prime_polyA"]
     three_prime_polyT = stats_dict["3_prime_polyT"]
     return (
-        f"# polya-filter stats on {input_file}\n"
+        f"# polya-filter stats on {input_file}, with polyA/T >={polya_length}, mismatch <{mismatch}, adaptor length <={adaptor_length}\n"
         f"\n"
         f"reads with polyA/T match: {matched} ({pc_matched:.2f}% of total)\n"
         f"reads without polyA/T match: {not_matched} ({100-pc_matched:.2f}% of total)\n"
