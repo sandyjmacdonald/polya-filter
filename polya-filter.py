@@ -118,17 +118,25 @@ def filter_reads(
 
 
 def format_stats(stats_dict, input_file):
+    matched = stats_dict["matched"]
+    not_matched = stats_dict["not_matched"]
+    total = matched + not_matched
+    pc_matched = (matched / total) * 100
+    five_prime_polyA = stats_dict["5_prime_polyA"]
+    five_prime_polyT = stats_dict["5_prime_polyT"]
+    three_prime_polyA = stats_dict["3_prime_polyA"]
+    three_prime_polyT = stats_dict["3_prime_polyT"]
     return (
         f"# polya-filter stats on {input_file}\n"
         f"\n"
-        f"reads with polyA/T match: {stats_dict["matched"]}\n"
-        f"reads without polyA/T match: {stats_dict["not_matched"]}\n"
-        f"total reads: {stats_dict["matched"] + stats_dict["not_matched"]}\n"
+        f"reads with polyA/T match: {matched} ({pc_matched:.2f}% of total)\n"
+        f"reads without polyA/T match: {not_matched} ({100-pc_matched:.2f}% of total)\n"
+        f"total reads: {total}\n"
         f"\n"
-        f"reads with 5' polyA match: {stats_dict["5_prime_polyA"]}\n"
-        f"reads with 5' polyT match: {stats_dict["5_prime_polyT"]}\n"
-        f"reads with 3' polyA match: {stats_dict["3_prime_polyA"]}\n"
-        f"reads with 3' polyT match: {stats_dict["3_prime_polyT"]}\n"
+        f"reads with 5' polyA match: {five_prime_polyA} ({(five_prime_polyA/matched)*100:.2f}% of matched)\n"
+        f"reads with 5' polyT match: {five_prime_polyT} ({(five_prime_polyT/matched)*100:.2f}% of matched)\n"
+        f"reads with 3' polyA match: {three_prime_polyA} ({(three_prime_polyA/matched)*100:.2f}% of matched)\n"
+        f"reads with 3' polyT match: {three_prime_polyT} ({(three_prime_polyT/matched)*100:.2f}% of matched)\n"
     )
 
 

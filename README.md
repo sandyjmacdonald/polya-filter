@@ -1,7 +1,7 @@
 # polya-filter
 A simple and fast Python script to filter a fastq file and keep/discard reads with polyA/T stretches, designed for long read (e.g. ONT/Nanopore) transcriptomic reads where polyA/T tails are expected.
 
-🏃 Runs *really* quickly! Takes just over 5 seconds to filter a set of 1 million ONT reads in a ~500MB fastq file. This is because of the efficient way that reads are parsed, four lines at a time, and using only the python standard library components. 🏃
+🏃 Runs *really* quickly! Takes less than 20 seconds to filter a set of 1 million ONT reads in a ~500MB fastq file. This is because of the efficient way that reads are parsed, four lines at a time, and using only the python standard library components. 🏃
 
 ## Arguments
 
