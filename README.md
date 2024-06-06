@@ -54,4 +54,4 @@ The program can also estimate polyA/T lengths at the ends (i.e. 5' and 3') of re
 
 Example density plot:
 
-<img src="polya_histo.png" width="400">
+![](polya_histo.png)
