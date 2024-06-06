@@ -5,7 +5,7 @@ import argparse
 # Default values for functions
 POLYA_DEFAULT = 16
 MISMATCH_DEFAULT = 0.1
-ADAPTOR_LENGTH_DEFAULT = 30
+ADAPTOR_LENGTH_DEFAULT = 0
 KEEP_DEFAULT = True
 
 
