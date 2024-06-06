@@ -17,6 +17,56 @@ stats_dict = {
     "3_prime_polyT": 0,
 }
 
+polya_lengths = {}
+
+
+def extend_polya(seq, start_pos, polya_length, direction, polya, mismatch):
+    """Attempts to extend detected polyA/T
+
+    :param seq: the whole sequence line of a read
+    :type seq: str
+    :param start_pos: the start position of the polyA/T in the read
+    :type start_pos: int
+    :param polya_length: length of polyA/T to match
+    :type polya_length: int
+    :param direction: the direction (fwd=0 i.e. 5' to 3', rev=1) in which to move
+    :type direction: int
+    :param polya: polyA if True, else polyT
+    :type polya: bool
+    :param mismatch: mismatch rate in polyA/T
+    :type mismatch: float
+    :return: length of extended polyA/T
+    :rtype: int
+    """
+    curr_mismatch = 0.0
+    span_length = 0
+    if direction == 0:
+        end_pos = start_pos + polya_length
+        while curr_mismatch < mismatch:
+            span_length = end_pos - start_pos
+            if polya:
+                num_matches = seq[start_pos:end_pos].count("A")
+            else:
+                num_matches = seq[start_pos:end_pos].count("T")
+            curr_mismatch = 1.0 - (num_matches / span_length)
+            end_pos += 1
+    elif direction == 1:
+        start_pos = -start_pos
+        end_pos = start_pos - polya_length
+        while curr_mismatch < mismatch:
+            span_length = abs(end_pos - start_pos)
+            if polya:
+                num_matches = seq[end_pos:start_pos].count("A")
+            else:
+                num_matches = seq[end_pos:start_pos].count("T")
+            curr_mismatch = 1.0 - (num_matches / span_length)
+            end_pos -= 1
+    else:
+        return
+    if span_length:
+        span_length = span_length - 1
+    return span_length
+
 
 def check_read(
     lines,
@@ -42,6 +92,8 @@ def check_read(
     """
     seq = lines[1]
     match = False
+    direction = 0
+    polya = True
     num_mismatches = int(polya_length * mismatch)
     for i in range(0, adaptor_length + polya_length):
         start_window = seq[i : i + polya_length]
@@ -49,21 +101,37 @@ def check_read(
         if start_window.count("A") >= (polya_length - num_mismatches):
             match = True
             stats_dict["5_prime_polyA"] += 1
+            start_pos = i
             break
         elif start_window.count("T") >= (polya_length - num_mismatches):
             match = True
             stats_dict["5_prime_polyT"] += 1
+            start_pos = i
+            polya = False
             break
         elif end_window.count("A") >= (polya_length - num_mismatches):
             match = True
             stats_dict["3_prime_polyA"] += 1
+            start_pos = i
+            direction = 1
             break
         elif end_window.count("T") >= (polya_length - num_mismatches):
             match = True
             stats_dict["3_prime_polyT"] += 1
+            start_pos = i
+            direction = 1
+            polya = False
             break
     if match:
         stats_dict["matched"] += 1
+        if histo:
+            polya_length = extend_polya(
+                seq, start_pos, polya_length, direction, polya, mismatch
+            )
+            if polya_length not in polya_lengths:
+                polya_lengths[polya_length] = 1
+            else:
+                polya_lengths[polya_length] += 1
     else:
         stats_dict["not_matched"] += 1
     if keep and match:
@@ -118,6 +186,15 @@ def filter_reads(
 
 
 def format_stats(stats_dict, input_file):
+    """Formats the stats_dict for output to a text file
+
+    :param stats_dict: the stats_dict, as above
+    :type stats_dict: dict
+    :param input_file: the input fastq filename
+    :type input_file: str
+    :return: formated stats string
+    :rtype: str
+    """
     matched = stats_dict["matched"]
     not_matched = stats_dict["not_matched"]
     total = matched + not_matched
@@ -138,6 +215,20 @@ def format_stats(stats_dict, input_file):
         f"reads with 3' polyA match: {three_prime_polyA} ({(three_prime_polyA/matched)*100:.2f}% of matched)\n"
         f"reads with 3' polyT match: {three_prime_polyT} ({(three_prime_polyT/matched)*100:.2f}% of matched)\n"
     )
+
+
+def format_histo(polya_lengths):
+    """Formats a histogram in csv format from the polya_lengths dict
+
+    :param polya_lengths: polya_lengths dictionary
+    :type polya_lengths: dict
+    :return: csv-formatted histogram
+    :rtype: str
+    """
+    histo_out = "length,count\n"
+    for k in sorted(polya_lengths.keys()):
+        histo_out += f"{k},{polya_lengths[k]}\n"
+    return histo_out
 
 
 if __name__ == "__main__":
@@ -192,6 +283,13 @@ if __name__ == "__main__":
         help="Write stats to text file",
     )
     parser.set_defaults(stats=False)
+    parser.add_argument(
+        "--histo",
+        dest="histo",
+        action="store_true",
+        help="Write histogram of polyA/T lengths to csv file",
+    )
+    parser.set_defaults(histo=False)
 
     args = parser.parse_args()
 
@@ -202,6 +300,7 @@ if __name__ == "__main__":
     adaptor_length = args.adaptor_length
     keep = args.keep
     stats = args.stats
+    histo = args.histo
 
     # Run function on file
     filter_reads(
@@ -222,3 +321,13 @@ if __name__ == "__main__":
         formatted_stats = format_stats(stats_dict, input_file)
         with open(stats_out_file, "w") as out:
             out.write(formatted_stats)
+
+    # Write histo
+    if histo:
+        if output_file:
+            histo_out_file = output_file.replace(".fastq", ".histo")
+        else:
+            histo_out_file = input_file.replace(".fastq", ".histo")
+        formatted_histo = format_histo(polya_lengths)
+        with open(histo_out_file, "w") as out:
+            out.write(formatted_histo)
