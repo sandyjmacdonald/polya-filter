@@ -2,6 +2,7 @@
 
 import argparse
 
+# Default values for functions
 POLYA_DEFAULT = 16
 MISMATCH_DEFAULT = 0.1
 ADAPTOR_LENGTH_DEFAULT = 30
@@ -15,6 +16,21 @@ def check_read(
     adaptor_length=ADAPTOR_LENGTH_DEFAULT,
     keep=KEEP_DEFAULT,
 ):
+    """Check whether fastq read has matching polyA/T
+
+    :param lines: 4-line fastq read
+    :type lines: str
+    :param polya_length: length of polyA/T to match, defaults to POLYA_DEFAULT
+    :type polya_length: int, optional
+    :param mismatch: mismatch rate in polyA/T, defaults to MISMATCH_DEFAULT
+    :type mismatch: float, optional
+    :param adaptor_length: length of adapter to pad by, defaults to ADAPTOR_LENGTH_DEFAULT
+    :type adaptor_length: int, optional
+    :param keep: whether to keep matching read, defaults to KEEP_DEFAULT
+    :type keep: bool, optional
+    :return: list of lines from the matching read
+    :rtype: list
+    """
     seq = lines[1]
     match = False
     num_mismatches = int(polya_length * mismatch)
@@ -38,7 +54,7 @@ def check_read(
     elif not keep and not match:
         return lines
     else:
-        return None
+        return []
 
 
 def filter_reads(
@@ -49,21 +65,39 @@ def filter_reads(
     adaptor_length=ADAPTOR_LENGTH_DEFAULT,
     keep=KEEP_DEFAULT,
 ):
+    """Filter an input fastq file and output to new fastq file
+
+    :param input_file: the input fastq filename
+    :type input_file: str
+    :param output_file: the output fastq filename, if False write to stdout
+    :type output_file: str
+    :param polya_length: length of polyA/T to match, defaults to POLYA_DEFAULT
+    :type polya_length: int, optional
+    :param mismatch: mismatch rate in polyA/T, defaults to MISMATCH_DEFAULT
+    :type mismatch: float, optional
+    :param adaptor_length: length of adapter to pad by, defaults to ADAPTOR_LENGTH_DEFAULT
+    :type adaptor_length: int, optional
+    :param keep: whether to keep matching read, defaults to KEEP_DEFAULT
+    :type keep: bool, optional
+    """
     with open(input_file, "r") as file:
-        with open(output_file, "w") as out:
-            while True:
-                lines = [file.readline() for _ in range(4)]
-                if not lines[0]:
-                    break
-                processed = check_read(
-                    lines,
-                    polya_length=polya_length,
-                    mismatch=mismatch,
-                    adaptor_length=adaptor_length,
-                    keep=keep,
-                )
-                if processed is not None:
-                    out.write("".join(processed))
+        if output_file:
+            out = open(output_file, "w")
+        while True:
+            lines = [file.readline() for _ in range(4)]
+            if not lines[0]:
+                break
+            processed = check_read(
+                lines,
+                polya_length=polya_length,
+                mismatch=mismatch,
+                adaptor_length=adaptor_length,
+                keep=keep,
+            )
+            if processed and output_file:
+                out.write("".join(processed))
+            elif processed and not output_file:
+                print("".join(processed))
 
 
 if __name__ == "__main__":
@@ -74,7 +108,11 @@ if __name__ == "__main__":
         "-i", "--input", type=str, help="input fastq filename", required=True
     )
     parser.add_argument(
-        "-o", "--output", type=str, help="output fastq filename", required=True
+        "-o",
+        "--output",
+        type=str,
+        help="output fastq filename, omit to write to stdout",
+        default=False,
     )
     parser.add_argument(
         "-p",
@@ -117,6 +155,7 @@ if __name__ == "__main__":
     adaptor_length = args.adaptor_length
     keep = args.keep
 
+    # Run function on file
     filter_reads(
         input_file,
         output_file,
