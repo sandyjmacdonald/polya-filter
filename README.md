@@ -44,6 +44,8 @@ Read an input file called `reads.fastq`, filter to **discard** reads with a poly
 ./polya-filter.py -i reads.fastq -p 12 -m 0.1 -a 75 --discard
 ```
 
+## Estimating polyA/T lengths
+
 The program can also estimate polyA/T lengths at the ends (i.e. 5' and 3') of reads and output a csv-formatted histogram of the lengths and counts, which can then be plotted in your favourite plotting program. Simply add `--histo` to do this, as follows:
 
 ```bash
