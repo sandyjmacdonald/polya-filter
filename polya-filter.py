@@ -48,7 +48,8 @@ def extend_polya(seq, start_pos, polya_length, direction, polya, mismatch):
                 num_matches = seq[start_pos:end_pos].count("A")
             else:
                 num_matches = seq[start_pos:end_pos].count("T")
-            curr_mismatch = 1.0 - (num_matches / span_length)
+            curr_mismatch = (span_length - num_matches) / span_length
+            # curr_mismatch = 1.0 - (num_matches / span_length)
             end_pos += 1
     elif direction == 1:
         start_pos = -start_pos
@@ -59,7 +60,8 @@ def extend_polya(seq, start_pos, polya_length, direction, polya, mismatch):
                 num_matches = seq[end_pos:start_pos].count("A")
             else:
                 num_matches = seq[end_pos:start_pos].count("T")
-            curr_mismatch = 1.0 - (num_matches / span_length)
+            curr_mismatch = (span_length - num_matches) / span_length
+            # curr_mismatch = 1.0 - (num_matches / span_length)
             end_pos -= 1
     else:
         return
@@ -94,7 +96,7 @@ def check_read(
     match = False
     direction = 0
     polya = True
-    num_mismatches = int(polya_length * mismatch)
+    num_mismatches = polya_length * mismatch
     for i in range(0, adaptor_length + polya_length):
         start_window = seq[i : i + polya_length]
         end_window = seq[-(i + polya_length) : -i]
