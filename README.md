@@ -1,3 +1,12 @@
+> [!IMPORTANT]
+> **This repository has moved to Codeberg.**
+>
+> Active development now happens at **[https://codeberg.org/sandyjmacdonald/polya-filter](https://codeberg.org/sandyjmacdonald/polya-filter)**.
+>
+> This GitHub copy is archived and read-only. Please file issues, open pull requests, and follow the project on Codeberg.
+
+---
+
 # polya-filter
 A simple and fast Python program to filter a fastq file and keep/discard reads with polyA/T stretches, designed for long read (e.g. ONT/Nanopore) transcriptomic reads where polyA/T tails are expected.
 
